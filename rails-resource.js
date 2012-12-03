@@ -280,6 +280,35 @@ angular.module('railsResource', ['ng']).
       this.template = template.replace(/\\:/g, ':');
     }
 
+    function isDate (col) {
+      return (/_at$/i).test(col);
+    };
+
+    /** RR Enhancement
+     * Take rails response and massage it for angular/js (de-root node, convert dates)
+     */
+    function coerceData(data, node) {
+      if (data && node && data[node]) {
+        // de-nest and fix any dates
+        forEach(data[node], function (val, attr) {
+          if (isDate(attr) && val) {
+            val = new Date(val);
+          }
+          data[attr] = val;
+        });
+        delete data[node];
+      } else {
+        // just fix dates - coded twice so don't loop twice when root node given.
+        forEach(data, function (val, attr) {
+          if (isDate(attr) && val) {
+            data[attr] = new Date(val);
+          }
+        });
+      }
+      return data;
+    };
+
+
     Route.prototype = {
       url: function(params) {
         var self = this,
@@ -311,7 +340,7 @@ angular.module('railsResource', ['ng']).
     };
 
 
-    function ResourceFactory(url, paramDefaults, actions) {
+    function ResourceFactory(url, paramDefaults, actions, options) {
       var route = new Route(url);
 
       actions = extend({}, DEFAULT_ACTIONS, actions);
@@ -333,6 +362,9 @@ angular.module('railsResource', ['ng']).
       forEach(actions, function(action, name) {
         action.method = angular.uppercase(action.method);
         var hasBody = action.method == 'POST' || action.method == 'PUT' || action.method == 'PATCH';
+
+
+
         Resource[name] = function(a1, a2, a3, a4) {
           var params = {};
           var data;
@@ -372,6 +404,30 @@ angular.module('railsResource', ['ng']).
               arguments.length + " arguments.";
           }
 
+          /** RR Enhancement
+           * On updates, use whitelist if available to ensure only
+           * certain attributes get passed to the server.
+           */
+          if (action.method == 'PUT' && options.whitelist) {
+            var whitelistedData = {};
+            forEach(options.whitelist, function (key, value) {
+              if (data.hasOwnProperty(key)) {
+                whitelistedData[key] = data[key];
+              }
+            });
+            data = whitelistedData;
+          }
+
+          /** RR Enhancement
+           * If a root node has been specified, nest the data under it.
+           * Rails expects a model's data to be nested under the model's name
+           */
+          if (hasbody && options.rootNode && !data[options.rootNode]) {
+            var rootNodeData = {};
+            rootNodeData[options.rootNode] = data;
+            data = rootNodeData;
+          }
+
           var value = this instanceof Resource ? this : (action.isArray ? [] : new Resource(data));
           $http({
             method: action.method,
@@ -381,16 +437,23 @@ angular.module('railsResource', ['ng']).
           }).then(function(response) {
               var data = response.data;
 
+              /** RR Enhancement
+               * call coerceData on response to convert rails data structure
+               * to angular friendly data structure
+               */
               if (data) {
                 if (action.isArray) {
                   value.length = 0;
                   forEach(data, function(item) {
+                    item = coerceData(item, options.rootNode);
                     value.push(new Resource(item));
                   });
                 } else {
-                  copy(data, value);
+                  copy(coerceData(data, options.rootNode), value);
                 }
               }
+
+
               (success||noop)(value, response.headers);
             }, error);
 
@@ -420,8 +483,28 @@ angular.module('railsResource', ['ng']).
               arguments.length + " arguments.";
           }
           var data = hasBody ? this : undefined;
+
+          /** RR Enhancement
+           * If the resource has an id, make sure it gets passed through to the params
+           */
+          if (this.id) {
+            params.id = this.id;
+          }
+
           Resource[name].call(this, params, data, success, error);
         };
+
+        /** RR Enhancement
+         * Rails wants a POST for create and a PUT for update, we just want a "save" for our API
+         */
+        Resource.prototype.$save = function () {
+          if (this.id) {
+            return this.$update.apply(this, arguments);
+          } else {
+            return this.$create.apply(this, arguments);
+          }
+        };
+
       });
 
       Resource.bind = function(additionalParamDefaults){

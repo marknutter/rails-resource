@@ -212,7 +212,7 @@
     </doc:example>
  */
 angular.module('railsResource', ['ng']).
-  factory('$resource', ['$http', '$parse', function($http, $parse) {
+  factory('railsResource', ['$http', '$parse', function($http, $parse) {
     var DEFAULT_ACTIONS = {
       'get':    {method:'GET'},
       'save':   {method:'POST'},
@@ -422,7 +422,7 @@ angular.module('railsResource', ['ng']).
            * If a root node has been specified, nest the data under it.
            * Rails expects a model's data to be nested under the model's name
            */
-          if (hasbody && options.rootNode && !data[options.rootNode]) {
+          if (hasBody && options.rootNode && !data[options.rootNode]) {
             var rootNodeData = {};
             rootNodeData[options.rootNode] = data;
             data = rootNodeData;

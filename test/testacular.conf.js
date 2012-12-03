@@ -1,28 +1,69 @@
-basePath = '../';
+// Testacular configuration
+// Generated on Sun Dec 02 2012 23:14:53 GMT-0600 (CST)
 
+
+// base path, that will be used to resolve files and exclude
+basePath = '';
+
+
+// list of files / patterns to load in the browser
 files = [
   JASMINE,
   JASMINE_ADAPTER,
   'angular.js',
-  '../rails-resource-*.js',
+  '../rails-resource.js',
   'angular-mocks.js',
   'rails-resource-spec.js'
 ];
 
-// server port
-port = 8081;
 
-// runner port
+// list of files to exclude
+exclude = [
+
+];
+
+
+// test results reporter to use
+// possible values: 'dots', 'progress', 'junit'
+reporters = ['progress'];
+
+
+// web server port
+port = 8080;
+
+
+// cli runner port
 runnerPort = 9100;
 
-// auto-watch off by default
-autoWatch = false;
-singleRun = true;
 
+// enable / disable colors in the output (reporters and logs)
+colors = true;
+
+
+// level of logging
+// possible values: LOG_DISABLE || LOG_ERROR || LOG_WARN || LOG_INFO || LOG_DEBUG
+logLevel = LOG_INFO;
+
+
+// enable / disable watching file and executing tests whenever any file changes
+autoWatch = true;
+
+
+// Start these browsers, currently available:
+// - Chrome
+// - ChromeCanary
+// - Firefox
+// - Opera
+// - Safari (only Mac)
+// - PhantomJS
+// - IE (only Windows)
 browsers = ['PhantomJS'];
 
-reporters = ['dots', 'junit'];
 
-junitReporter = {
-  outputFile: 'test/output/unit-results.xml'
-};
+// If browser does not capture in given timeout [ms], kill it
+captureTimeout = 5000;
+
+
+// Continuous Integration mode
+// if true, it capture browsers, run tests and exit
+singleRun = false;

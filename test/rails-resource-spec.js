@@ -1,11 +1,11 @@
 /*
- * Unit test for konaResource:
+ * Unit test for railsResource:
  *
- * konaResource is a wrapper for ngResource to enable the ability
+ * railsResource is a wrapper for ngResource to enable the ability
  * to strip root nodes out of incoming data, and whitelist to allow
  * only certain resource assets to be sent to the server
  */
-describe('Service: konaResource', function () {
+describe('Service: railsResource', function () {
 
   var $httpBackend,
       session,
@@ -15,7 +15,7 @@ describe('Service: konaResource', function () {
       allSpy,
       mockStore;
 
-  beforeEach(module('konaResource'));
+  beforeEach(module('railsResource'));
 
   beforeEach(function() {
     var fakeSession = {
@@ -25,15 +25,14 @@ describe('Service: konaResource', function () {
     };
 
     module(function($provide) {
-      $provide.value('konaSession', fakeSession);
+
     });
 
     inject(function($injector) {
       $httpBackend = $injector.get('$httpBackend');
-      session = $injector.get('konaSession');
-      var konaResource = $injector.get('konaResource');
+      var railsResource = $injector.get('railsResource');
 
-      Resource = konaResource('resources/:id.json',
+      Resource = railsResource('resources/:id.json',
           { /* default params */ },
           {
             create:{method:'POST', action:"create", isArray:false},
@@ -44,12 +43,11 @@ describe('Service: konaResource', function () {
           },
           {rootNode:"resource", whitelist:["foo"]}
       );
+
+
     });
   });
 
-  afterEach(function() {
-    expect(session.addBaseDomainForResource).toHaveBeenCalled();
-  });
 
   it("should support 'create'", inject(function () {
     $httpBackend.expectPOST('resources.json', {resource:{foo:'zap'}}).respond({ resource:{id:1, foo:'zap'}});
@@ -120,11 +118,11 @@ describe('Service: konaResource', function () {
     expect(resource.created_at.toUTCString()).toBe('Thu, 02 Jan 2003 18:22:33 GMT');
   }));
 
-  it("should coerce rails data on construction", inject(function () {
-    // 1041531753000 == 1/2/3 11:22:33 MST  (2003-01-03).
-    var when = 1041531753000;
-    var resource = new Resource({resource: {id:1, created_at: when}});
-    expect(resource.id).toBe(1);
-    expect(resource.created_at.toUTCString()).toBe('Thu, 02 Jan 2003 18:22:33 GMT');
-  }));
+  // it("should coerce rails data on construction", inject(function () {
+  //   // 1041531753000 == 1/2/3 11:22:33 MST  (2003-01-03).
+  //   var when = 1041531753000;
+  //   var resource = new Resource({resource: {id:1, created_at: when}});
+  //   expect(resource.id).toBe(1);
+  //   expect(resource.created_at.toUTCString()).toBe('Thu, 02 Jan 2003 18:22:33 GMT');
+  // }));
 });
